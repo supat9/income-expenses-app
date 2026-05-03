@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Wallet, Check } from 'lucide-react';
 import { useTweaks } from '@/components/Providers';
 import { cx, Btn } from '@/components/Primitives';
@@ -8,7 +8,7 @@ import { Sparkline } from '@/components/Charts';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+function LoginContent() {
   const { tweaks, setTweak } = useTweaks();
   const locale = tweaks.locale;
   const [loading, setLoading] = useState(false);
@@ -71,5 +71,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }
