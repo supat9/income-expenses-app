@@ -1,20 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Wallet, Check } from 'lucide-react';
 import { useTweaks } from '@/components/Providers';
 import { cx, Btn } from '@/components/Primitives';
 import { Sparkline } from '@/components/Charts';
 import { signIn } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const { tweaks, setTweak } = useTweaks();
   const locale = tweaks.locale;
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    await signIn('google', { callbackUrl: '/dashboard' });
+    const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard';
+    await signIn('google', { callbackUrl });
   };
 
   return (

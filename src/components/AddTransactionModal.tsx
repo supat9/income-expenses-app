@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Modal, TextInput, Select, Btn } from './Primitives';
 import { useTweaks } from '@/components/Providers';
 import { I18N } from '@/lib/i18n';
@@ -15,73 +15,80 @@ interface AddTransactionModalProps {
   editing?: any;
 }
 
+type FormState = {
+  txType: "income" | "expense";
+  date: string;
+  amount: string;
+  categoryId: string;
+  note: string;
+  account: string;
+  error: string | null;
+};
+
+function defaultFormState(editing: AddTransactionModalProps['editing'], categories: AddTransactionModalProps['categories']): FormState {
+  if (editing) return {
+    txType: editing.amount >= 0 ? "income" : "expense",
+    date: new Date(editing.date).toISOString().split('T')[0],
+    amount: Math.abs(editing.amount).toString(),
+    categoryId: editing.categoryId,
+    note: editing.note ?? "",
+    account: editing.account,
+    error: null,
+  };
+  return {
+    txType: "expense",
+    date: new Date().toISOString().split('T')[0],
+    amount: "",
+    categoryId: categories.find(c => c.kind === "expense")?.id ?? "",
+    note: "",
+    account: "SCB Easy",
+    error: null,
+  };
+}
+
 export function AddTransactionModal({ open, onClose, onSubmit, categories, editing }: AddTransactionModalProps) {
   const { tweaks } = useTweaks();
   const locale = tweaks.locale;
   const t = I18N[locale];
 
-  const [txType, setTxType] = useState<"income" | "expense">("expense");
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [amount, setAmount] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [note, setNote] = useState("");
-  const [account, setAccount] = useState("SCB Easy");
+  const [form, setForm] = useState<FormState>(() => defaultFormState(editing, categories));
   const [saving, setSaving] = useState(false);
 
-  const filteredCategories = categories.filter(c => c.kind === txType);
+  const update = (patch: Partial<FormState>) => setForm(prev => ({ ...prev, ...patch }));
 
-  useEffect(() => {
-    if (open) {
-      if (editing) {
-        const type = editing.amount >= 0 ? "income" : "expense";
-        setTxType(type);
-        setDate(new Date(editing.date).toISOString().split('T')[0]);
-        setAmount(Math.abs(editing.amount).toString());
-        setCategoryId(editing.categoryId);
-        setNote(editing.note);
-        setAccount(editing.account);
-      } else {
-        setTxType("expense");
-        setDate(new Date().toISOString().split('T')[0]);
-        setAmount("");
-        const expenseCats = categories.filter(c => c.kind === "expense");
-        setCategoryId(expenseCats[0]?.id ?? "");
-        setNote("");
-        setAccount("SCB Easy");
-      }
-    }
-  }, [editing, open]);
+  const filteredCategories = categories.filter(c => c.kind === form.txType);
 
   const handleTypeChange = (type: "income" | "expense") => {
-    setTxType(type);
     const cats = categories.filter(c => c.kind === type);
-    setCategoryId(cats[0]?.id ?? "");
+    update({ txType: type, categoryId: cats[0]?.id ?? "" });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const amt = parseFloat(amount);
-    if (!amt || !categoryId) return;
+  const handleSubmit = async () => {
+    const amt = parseFloat(form.amount);
+    if (!amt || amt <= 0 || !form.categoryId) return;
     setSaving(true);
+    update({ error: null });
     try {
       await onSubmit({
         id: editing?.id,
-        date: new Date(date).toISOString(),
-        amount: txType === "expense" ? -amt : amt,
-        categoryId,
-        note,
-        account,
+        date: new Date(form.date).toISOString(),
+        amount: form.txType === "expense" ? -amt : amt,
+        categoryId: form.categoryId,
+        note: form.note,
+        account: form.account,
       });
       onClose();
+    } catch {
+      update({ error: locale === "th" ? "บันทึกไม่สำเร็จ กรุณาลองใหม่" : "Failed to save. Please try again." });
     } finally {
       setSaving(false);
     }
   };
 
   const preview = (() => {
-    const amt = parseFloat(amount) || 0;
+    const amt = parseFloat(form.amount) || 0;
     if (!amt) return null;
-    return formatTHB(txType === "expense" ? -amt : amt, { sign: true });
+    return formatTHB(form.txType === "expense" ? -amt : amt, { sign: true });
   })();
 
   return (
@@ -98,7 +105,12 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="form-grid">
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="form-grid">
+        {form.error && (
+          <div style={{ color: "var(--expense)", fontSize: 13, padding: "8px 10px", background: "color-mix(in oklab, var(--expense) 10%, transparent)", borderRadius: 8 }}>
+            {form.error}
+          </div>
+        )}
         <div className="field">
           <label className="field-label">{locale === "th" ? "ประเภท" : "Type"}</label>
           <div style={{ display: "flex", gap: 8 }}>
@@ -113,10 +125,10 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
                 gap: 6,
                 padding: "10px 0",
                 borderRadius: 10,
-                border: txType === "income" ? "2px solid var(--income)" : "2px solid var(--line)",
-                background: txType === "income" ? "color-mix(in oklab, var(--income) 10%, transparent)" : "transparent",
-                color: txType === "income" ? "var(--income)" : "var(--ink-3)",
-                fontWeight: txType === "income" ? 600 : 400,
+                border: form.txType === "income" ? "2px solid var(--income)" : "2px solid var(--line)",
+                background: form.txType === "income" ? "color-mix(in oklab, var(--income) 10%, transparent)" : "transparent",
+                color: form.txType === "income" ? "var(--income)" : "var(--ink-3)",
+                fontWeight: form.txType === "income" ? 600 : 400,
                 fontSize: 14,
                 cursor: "pointer",
                 transition: "all .15s",
@@ -136,10 +148,10 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
                 gap: 6,
                 padding: "10px 0",
                 borderRadius: 10,
-                border: txType === "expense" ? "2px solid var(--expense)" : "2px solid var(--line)",
-                background: txType === "expense" ? "color-mix(in oklab, var(--expense) 10%, transparent)" : "transparent",
-                color: txType === "expense" ? "var(--expense)" : "var(--ink-3)",
-                fontWeight: txType === "expense" ? 600 : 400,
+                border: form.txType === "expense" ? "2px solid var(--expense)" : "2px solid var(--line)",
+                background: form.txType === "expense" ? "color-mix(in oklab, var(--expense) 10%, transparent)" : "transparent",
+                color: form.txType === "expense" ? "var(--expense)" : "var(--ink-3)",
+                fontWeight: form.txType === "expense" ? 600 : 400,
                 fontSize: 14,
                 cursor: "pointer",
                 transition: "all .15s",
@@ -153,33 +165,33 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
 
         <div className="field">
           <label className="field-label">{t.common.date}</label>
-          <input type="date" value={date} onChange={e => setDate(e.target.value)} className="ti-input" />
+          <input type="date" value={form.date} onChange={e => update({ date: e.target.value })} className="ti-input" />
         </div>
 
         <div className="field">
           <label className="field-label">{t.common.amount}{preview && <span style={{ marginLeft: 8, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>{preview}</span>}</label>
-          <TextInput value={amount} onChange={setAmount} placeholder="0.00" type="number" />
+          <TextInput value={form.amount} onChange={v => update({ amount: v })} placeholder="0.00" type="number" />
         </div>
 
         <div className="field">
           <label className="field-label">{t.common.category}</label>
           <Select
-            value={categoryId}
-            onChange={setCategoryId}
+            value={form.categoryId}
+            onChange={v => update({ categoryId: v })}
             options={filteredCategories.map(c => ({ value: c.id, label: (locale === "th" ? c.th : c.en) }))}
           />
         </div>
 
         <div className="field">
           <label className="field-label">{t.common.note}</label>
-          <TextInput value={note} onChange={setNote} placeholder={t.common.note} />
+          <TextInput value={form.note} onChange={v => update({ note: v })} placeholder={t.common.note} />
         </div>
 
         <div className="field">
           <label className="field-label">{t.common.account}</label>
           <Select
-            value={account}
-            onChange={setAccount}
+            value={form.account}
+            onChange={v => update({ account: v })}
             options={[
               { value: "SCB Easy", label: "SCB Easy" },
               { value: "Kasikorn", label: "Kasikorn" },

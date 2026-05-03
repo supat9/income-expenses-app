@@ -12,6 +12,16 @@ import { AddTransactionModal } from '@/components/AddTransactionModal';
 
 type ChartPeriod = "week" | "month" | "6m";
 
+async function apiFetchAll() {
+  const [catRes, txRes, budRes] = await Promise.all([
+    fetch("/api/categories"),
+    fetch("/api/transactions?months=6"),
+    fetch("/api/budgets"),
+  ]);
+  if (!catRes.ok || !txRes.ok || !budRes.ok) throw new Error("API error");
+  return Promise.all([catRes.json(), txRes.json(), budRes.json()]);
+}
+
 export default function DashboardPage() {
   const { tweaks } = useTweaks();
   const locale = tweaks.locale;
@@ -22,6 +32,7 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [budgets, setBudgets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("6m");
 
   const [addOpen, setAddOpen] = useState(false);
@@ -29,36 +40,46 @@ export default function DashboardPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
-      const [catRes, txRes, budRes] = await Promise.all([
-        fetch("/api/categories"),
-        fetch("/api/transactions?months=6"),
-        fetch("/api/budgets"),
-      ]);
-      if (catRes.ok) setCategories(await catRes.json());
-      if (txRes.ok) setTransactions(await txRes.json());
-      if (budRes.ok) setBudgets(await budRes.json());
+      const [cats, txs, buds] = await apiFetchAll();
+      setCategories(cats);
+      setTransactions(txs);
+      setBudgets(buds);
+    } catch {
+      setError(true);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    let cancelled = false;
+    apiFetchAll()
+      .then(([cats, txs, buds]) => {
+        if (cancelled) return;
+        setCategories(cats);
+        setTransactions(txs);
+        setBudgets(buds);
+        setLoading(false);
+      })
+      .catch(() => { if (!cancelled) { setError(true); setLoading(false); } });
+    return () => { cancelled = true; };
+  }, []);
 
   const onSubmitTx = async (tx: any) => {
-    if (tx.id) {
-      await fetch(`/api/transactions/${tx.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: tx.date, amount: tx.amount, categoryId: tx.categoryId, note: tx.note, account: tx.account }),
-      });
-    } else {
-      await fetch("/api/transactions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: tx.date, amount: tx.amount, categoryId: tx.categoryId, note: tx.note, account: tx.account }),
-      });
-    }
+    const res = tx.id
+      ? await fetch(`/api/transactions/${tx.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: tx.date, amount: tx.amount, categoryId: tx.categoryId, note: tx.note, account: tx.account }),
+        })
+      : await fetch("/api/transactions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: tx.date, amount: tx.amount, categoryId: tx.categoryId, note: tx.note, account: tx.account }),
+        });
+    if (!res.ok) throw new Error(await res.text());
     await loadData();
   };
 
@@ -156,13 +177,13 @@ export default function DashboardPage() {
 
   const incomeMonth = sumIncome(monthTxs);
   const expenseMonth = sumExpense(monthTxs);
-  const lastIncome = sumIncome(lastMonthTxs) || 1;
-  const lastExpense = sumExpense(lastMonthTxs) || 1;
-  const incomeDelta = ((incomeMonth - lastIncome) / lastIncome) * 100;
-  const expenseDelta = ((expenseMonth - lastExpense) / lastExpense) * 100;
+  const lastIncome = sumIncome(lastMonthTxs);
+  const lastExpense = sumExpense(lastMonthTxs);
+  const incomeDelta = lastIncome > 0 ? ((incomeMonth - lastIncome) / lastIncome) * 100 : undefined;
+  const expenseDelta = lastExpense > 0 ? ((expenseMonth - lastExpense) / lastExpense) * 100 : undefined;
   const net = incomeMonth - expenseMonth;
-  const lastNet = lastIncome - lastExpense || 1;
-  const netDelta = ((net - lastNet) / Math.abs(lastNet)) * 100;
+  const lastNet = lastIncome - lastExpense;
+  const netDelta = lastNet !== 0 ? ((net - lastNet) / Math.abs(lastNet)) * 100 : undefined;
 
   const expenseByCat = new Map<string, number>();
   monthTxs.filter(t => t.amount < 0).forEach(t => {
@@ -227,6 +248,14 @@ export default function DashboardPage() {
           </>
         }
       />
+
+      {error && (
+        <div className="alert">
+          <AlertTriangle size={16} />
+          <span>{locale === "th" ? "โหลดข้อมูลไม่สำเร็จ" : "Failed to load data"}</span>
+          <button onClick={loadData} className="alert-link">{locale === "th" ? "ลองใหม่" : "Retry"}</button>
+        </div>
+      )}
 
       {overBudget.length > 0 && (
         <div className="alert">
@@ -364,6 +393,7 @@ export default function DashboardPage() {
       </div>
 
       <AddTransactionModal
+        key={`${editing?.id ?? 'new'}-${addOpen}`}
         open={addOpen}
         onClose={() => setAddOpen(false)}
         onSubmit={onSubmitTx}
