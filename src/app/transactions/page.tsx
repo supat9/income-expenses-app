@@ -143,6 +143,27 @@ export default function TransactionsPage() {
         .tx-actions button { width: 28px; height: 28px; border: none; background: transparent; color: var(--ink-3); border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
         .tx-actions button:hover { background: var(--surface); color: var(--ink); }
         .tx-actions button:last-child:hover { color: var(--expense); }
+
+        @media (max-width: 720px) {
+          .tx-summary { grid-template-columns: 1fr; gap: 8px; }
+          .tx-sum-card { padding: 12px 14px; }
+          .tx-sum-card .num { font-size: 16px; }
+          .tx-filters { padding: 10px 12px; gap: 6px; }
+          .tx-thead { display: none; }
+          .tx-row {
+            grid-template-columns: 36px 1fr auto;
+            grid-template-rows: auto auto;
+            gap: 2px 10px;
+            padding: 12px 14px;
+          }
+          .tx-row > .rcat { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+          .tx-row > .tx-note { grid-column: 2; grid-row: 1; }
+          .tx-row > div:nth-child(3) { grid-column: 2; grid-row: 2; align-self: center; }
+          .tx-time { display: none; }
+          .tx-row > .tx-amt { grid-column: 3; grid-row: 1; align-self: center; font-size: 13px; }
+          .tx-row > .tx-actions { grid-column: 3; grid-row: 2; opacity: 1; align-self: center; }
+          .tx-group-head { padding: 8px 14px; }
+        }
       `}</style>
 
       <PageHeader

@@ -764,6 +764,7 @@ nav.sidebar-nav {
   font-weight: 500;
   cursor: pointer;
   border-radius: 6px;
+  text-decoration: none;
 }
 .mobile-nav-item.is-active {
   color: var(--accent);
@@ -776,7 +777,7 @@ nav.sidebar-nav {
 @media (max-width: 720px) {
   .shell { grid-template-columns: 1fr; }
   .shell .sidebar { display: none; }
-  .main { padding: 20px 16px; }
+  .main { padding: 20px 16px 90px; }
 }
 
 /* Auth Screen Styles */
