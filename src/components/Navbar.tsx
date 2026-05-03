@@ -10,7 +10,7 @@ import { cx } from './ui';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function Navbar({ children }: { children: React.ReactNode }) {
   const { tweaks } = useTweaks();
   const { data: session } = useSession();
   const pathname = usePathname();
