@@ -5,7 +5,7 @@ import { I18N, Locale } from '@/lib/i18n';
 import { formatTHB } from '@/lib/formatters';
 
 interface AreaLineProps {
-  data: { income: number; expense: number; monthIndex: number; year: number }[];
+  data: { income: number; expense: number; monthIndex: number; year: number; label?: string }[];
   height?: number;
   padding?: { l: number; r: number; t: number; b: number };
   locale?: Locale;
@@ -53,11 +53,11 @@ export function AreaLine({
       <svg width={w} height={height} onMouseMove={onMove} onMouseLeave={() => setHover(null)} style={{ display: "block" }}>
         <defs>
           <linearGradient id="gIncome" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--income)" stopOpacity="0.28" />
+            <stop offset="0%" stopColor="var(--income)" stopOpacity="0.12" />
             <stop offset="100%" stopColor="var(--income)" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="gExpense" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--expense)" stopOpacity="0.22" />
+            <stop offset="0%" stopColor="var(--expense)" stopOpacity="0.10" />
             <stop offset="100%" stopColor="var(--expense)" stopOpacity="0" />
           </linearGradient>
         </defs>
@@ -69,23 +69,15 @@ export function AreaLine({
         ))}
         <path d={areaPath("income")} fill="url(#gIncome)" />
         <path d={areaPath("expense")} fill="url(#gExpense)" />
-        <path d={linePath("income")} stroke="var(--income)" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <path d={linePath("expense")} stroke="var(--expense)" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={linePath("income")} stroke="var(--income)" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={linePath("expense")} stroke="var(--expense)" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         {data.map((d, i) => (
           <g key={i}>
-            <text x={scaleX(i)} y={height - 6} textAnchor="middle" fontSize="11" fill="var(--ink-3)">{I18N[locale].months[d.monthIndex]}</text>
+            <text x={scaleX(i)} y={height - 6} textAnchor="middle" fontSize="11" fill="var(--ink-3)">{d.label ?? I18N[locale].months[d.monthIndex]}</text>
+            <circle cx={scaleX(i)} cy={scaleY(d.income)} r={hover === i ? 5 : 3.5} fill="var(--income)" stroke="var(--surface)" strokeWidth="2" />
+            <circle cx={scaleX(i)} cy={scaleY(d.expense)} r={hover === i ? 5 : 3.5} fill="var(--expense)" stroke="var(--surface)" strokeWidth="2" />
             {hover === i && (
-              <>
-                <line x1={scaleX(i)} x2={scaleX(i)} y1={padding.t} y2={height - padding.b} stroke="var(--ink-3)" strokeDasharray="3 3" opacity="0.5" />
-                <circle cx={scaleX(i)} cy={scaleY(d.income)} r="4" fill="var(--income)" stroke="var(--surface)" strokeWidth="2" />
-                <circle cx={scaleX(i)} cy={scaleY(d.expense)} r="4" fill="var(--expense)" stroke="var(--surface)" strokeWidth="2" />
-              </>
-            )}
-            {hover !== i && i === data.length - 1 && (
-              <>
-                <circle cx={scaleX(i)} cy={scaleY(d.income)} r="3.5" fill="var(--income)" stroke="var(--surface)" strokeWidth="2" />
-                <circle cx={scaleX(i)} cy={scaleY(d.expense)} r="3.5" fill="var(--expense)" stroke="var(--surface)" strokeWidth="2" />
-              </>
+              <line x1={scaleX(i)} x2={scaleX(i)} y1={padding.t} y2={height - padding.b} stroke="var(--ink-3)" strokeDasharray="3 3" opacity="0.4" />
             )}
           </g>
         ))}
@@ -96,7 +88,7 @@ export function AreaLine({
         const left = Math.max(8, Math.min(w - 168, cxValue - 80));
         return (
           <div style={{ position: "absolute", left, top: 4, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 12, boxShadow: "var(--shadow-md)", pointerEvents: "none", minWidth: 152 }}>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>{I18N[locale].monthsLong[d.monthIndex]} {d.year}</div>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>{d.label ?? `${I18N[locale].monthsLong[d.monthIndex]} ${d.year}`}</div>
             <div style={{ display: "flex", justifyContent: "space-between", color: "var(--income)" }}><span>● {I18N[locale].common.income}</span><span className="num">{formatTHB(d.income, { compact: true })}</span></div>
             <div style={{ display: "flex", justifyContent: "space-between", color: "var(--expense)" }}><span>● {I18N[locale].common.expense}</span><span className="num">{formatTHB(d.expense, { compact: true })}</span></div>
           </div>
