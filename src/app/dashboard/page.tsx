@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const [budgets, setBudgets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("6m");
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("month");
 
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
