@@ -10,6 +10,8 @@ import { formatTHB, formatDate } from '@/lib/formatters';
 import Link from 'next/link';
 import { AddTransactionModal } from '@/components/AddTransactionModal';
 
+type ChartPeriod = "week" | "month" | "6m";
+
 export default function DashboardPage() {
   const { tweaks } = useTweaks();
   const locale = tweaks.locale;
@@ -20,6 +22,7 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [budgets, setBudgets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("6m");
 
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -59,6 +62,7 @@ export default function DashboardPage() {
     await loadData();
   };
 
+  // 6m: aggregate by month (original)
   const monthly = useMemo(() => {
     const map = new Map();
     transactions.forEach(tx => {
@@ -70,6 +74,70 @@ export default function DashboardPage() {
     });
     return [...map.values()].sort((a, b) => a.year - b.year || a.monthIndex - b.monthIndex).slice(-6);
   }, [transactions]);
+
+  // week: aggregate by day for current week (Mon–Sun)
+  const weeklyData = useMemo(() => {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const mon = new Date(now);
+    mon.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+    mon.setHours(0, 0, 0, 0);
+
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(mon);
+      d.setDate(mon.getDate() + i);
+      return { date: d, label: I18N[locale].weekdays[i], income: 0, expense: 0, monthIndex: d.getMonth(), year: d.getFullYear() };
+    });
+
+    transactions.forEach(tx => {
+      const d = new Date(tx.date);
+      d.setHours(0, 0, 0, 0);
+      const idx = days.findIndex(day => day.date.getTime() === d.getTime());
+      if (idx === -1) return;
+      if (tx.amount >= 0) days[idx].income += tx.amount;
+      else days[idx].expense += -tx.amount;
+    });
+
+    return days;
+  }, [transactions, locale]);
+
+  // month: aggregate by week within current month
+  const monthlyWeekData = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+
+    const weeks: { label: string; income: number; expense: number; monthIndex: number; year: number }[] = [];
+    let weekStart = 1;
+    while (weekStart <= lastDay) {
+      const weekEnd = Math.min(weekStart + 6, lastDay);
+      weeks.push({ label: `${weekStart}–${weekEnd}`, income: 0, expense: 0, monthIndex: month, year });
+      weekStart += 7;
+    }
+
+    transactions.forEach(tx => {
+      const d = new Date(tx.date);
+      if (d.getFullYear() !== year || d.getMonth() !== month) return;
+      const weekIdx = Math.floor((d.getDate() - 1) / 7);
+      if (weekIdx < weeks.length) {
+        if (tx.amount >= 0) weeks[weekIdx].income += tx.amount;
+        else weeks[weekIdx].expense += -tx.amount;
+      }
+    });
+
+    return weeks;
+  }, [transactions]);
+
+  const chartData = chartPeriod === "6m" ? monthly : chartPeriod === "month" ? monthlyWeekData : weeklyData;
+  const chartSubtitle = (() => {
+    if (chartPeriod === "week") return locale === "th" ? "สัปดาห์นี้ (รายวัน)" : "This week (daily)";
+    if (chartPeriod === "month") {
+      const now = new Date();
+      return `${I18N[locale].monthsLong[now.getMonth()]} ${now.getFullYear() + (locale === "th" ? 543 : 0)}`;
+    }
+    return locale === "th" ? "6 เดือนล่าสุด" : "Last 6 months";
+  })();
 
   const monthTxs = transactions.filter(tx => {
     const d = new Date(tx.date);
@@ -127,6 +195,12 @@ export default function DashboardPage() {
     setMonthCursor(d);
   };
 
+  const chartTabs: { key: ChartPeriod; label: string }[] = [
+    { key: "week", label: locale === "th" ? "สัปดาห์" : "Week" },
+    { key: "month", label: locale === "th" ? "เดือน" : "Month" },
+    { key: "6m", label: locale === "th" ? "6 เดือน" : "6M" },
+  ];
+
   if (loading) {
     return (
       <div className="ds" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 320 }}>
@@ -176,15 +250,39 @@ export default function DashboardPage() {
       <div className="dash-grid">
         <Card
           title={locale === "th" ? "รายรับเทียบกับรายจ่าย" : "Income vs. Expense"}
-          subtitle={locale === "th" ? "6 เดือนล่าสุด" : "Last 6 months"}
+          subtitle={chartSubtitle}
           action={
-            <div className="legend">
-              <span className="legend-item"><i style={{ background: "var(--income)" }}></i> {t.common.income}</span>
-              <span className="legend-item"><i style={{ background: "var(--expense)" }}></i> {t.common.expense}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", gap: 2, background: "var(--line-2)", borderRadius: 7, padding: 2 }}>
+                {chartTabs.map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setChartPeriod(tab.key)}
+                    style={{
+                      padding: "3px 10px",
+                      borderRadius: 5,
+                      border: "none",
+                      fontSize: 12,
+                      fontWeight: chartPeriod === tab.key ? 600 : 400,
+                      background: chartPeriod === tab.key ? "var(--surface)" : "transparent",
+                      color: chartPeriod === tab.key ? "var(--ink-1)" : "var(--ink-3)",
+                      cursor: "pointer",
+                      boxShadow: chartPeriod === tab.key ? "var(--shadow-sm)" : "none",
+                      transition: "all .12s",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <div className="legend">
+                <span className="legend-item"><i style={{ background: "var(--income)" }}></i> {t.common.income}</span>
+                <span className="legend-item"><i style={{ background: "var(--expense)" }}></i> {t.common.expense}</span>
+              </div>
             </div>
           }
         >
-          <AreaLine data={monthly} locale={locale} height={240} />
+          <AreaLine data={chartData} locale={locale} height={240} />
         </Card>
 
         <Card title={locale === "th" ? "รายจ่ายตามหมวดหมู่" : "Spending by category"} subtitle={monthLabel}>

@@ -5,6 +5,7 @@ import { Modal, TextInput, Select, Btn } from './Primitives';
 import { useTweaks } from '@/components/Providers';
 import { I18N } from '@/lib/i18n';
 import { formatTHB } from '@/lib/formatters';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 interface AddTransactionModalProps {
   open: boolean;
@@ -19,6 +20,7 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
   const locale = tweaks.locale;
   const t = I18N[locale];
 
+  const [txType, setTxType] = useState<"income" | "expense">("expense");
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [amount, setAmount] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -26,27 +28,38 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
   const [account, setAccount] = useState("SCB Easy");
   const [saving, setSaving] = useState(false);
 
+  const filteredCategories = categories.filter(c => c.kind === txType);
+
   useEffect(() => {
     if (open) {
       if (editing) {
+        const type = editing.amount >= 0 ? "income" : "expense";
+        setTxType(type);
         setDate(new Date(editing.date).toISOString().split('T')[0]);
         setAmount(Math.abs(editing.amount).toString());
         setCategoryId(editing.categoryId);
         setNote(editing.note);
         setAccount(editing.account);
       } else {
+        setTxType("expense");
         setDate(new Date().toISOString().split('T')[0]);
         setAmount("");
-        setCategoryId(categories[0]?.id ?? "");
+        const expenseCats = categories.filter(c => c.kind === "expense");
+        setCategoryId(expenseCats[0]?.id ?? "");
         setNote("");
         setAccount("SCB Easy");
       }
     }
   }, [editing, open]);
 
+  const handleTypeChange = (type: "income" | "expense") => {
+    setTxType(type);
+    const cats = categories.filter(c => c.kind === type);
+    setCategoryId(cats[0]?.id ?? "");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cat = categories.find(c => c.id === categoryId);
     const amt = parseFloat(amount);
     if (!amt || !categoryId) return;
     setSaving(true);
@@ -54,7 +67,7 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
       await onSubmit({
         id: editing?.id,
         date: new Date(date).toISOString(),
-        amount: cat?.kind === "expense" ? -amt : amt,
+        amount: txType === "expense" ? -amt : amt,
         categoryId,
         note,
         account,
@@ -66,10 +79,9 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
   };
 
   const preview = (() => {
-    const cat = categories.find(c => c.id === categoryId);
     const amt = parseFloat(amount) || 0;
     if (!amt) return null;
-    return formatTHB(cat?.kind === "expense" ? -amt : amt, { sign: true });
+    return formatTHB(txType === "expense" ? -amt : amt, { sign: true });
   })();
 
   return (
@@ -88,6 +100,58 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
     >
       <form onSubmit={handleSubmit} className="form-grid">
         <div className="field">
+          <label className="field-label">{locale === "th" ? "ประเภท" : "Type"}</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => handleTypeChange("income")}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                padding: "10px 0",
+                borderRadius: 10,
+                border: txType === "income" ? "2px solid var(--income)" : "2px solid var(--line)",
+                background: txType === "income" ? "color-mix(in oklab, var(--income) 10%, transparent)" : "transparent",
+                color: txType === "income" ? "var(--income)" : "var(--ink-3)",
+                fontWeight: txType === "income" ? 600 : 400,
+                fontSize: 14,
+                cursor: "pointer",
+                transition: "all .15s",
+              }}
+            >
+              <ArrowUp size={15} strokeWidth={2.5} />
+              {locale === "th" ? "รายรับ" : "Income"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTypeChange("expense")}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                padding: "10px 0",
+                borderRadius: 10,
+                border: txType === "expense" ? "2px solid var(--expense)" : "2px solid var(--line)",
+                background: txType === "expense" ? "color-mix(in oklab, var(--expense) 10%, transparent)" : "transparent",
+                color: txType === "expense" ? "var(--expense)" : "var(--ink-3)",
+                fontWeight: txType === "expense" ? 600 : 400,
+                fontSize: 14,
+                cursor: "pointer",
+                transition: "all .15s",
+              }}
+            >
+              <ArrowDown size={15} strokeWidth={2.5} />
+              {locale === "th" ? "รายจ่าย" : "Expense"}
+            </button>
+          </div>
+        </div>
+
+        <div className="field">
           <label className="field-label">{t.common.date}</label>
           <input type="date" value={date} onChange={e => setDate(e.target.value)} className="ti-input" />
         </div>
@@ -102,7 +166,7 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
           <Select
             value={categoryId}
             onChange={setCategoryId}
-            options={categories.map(c => ({ value: c.id, label: (locale === "th" ? c.th : c.en) }))}
+            options={filteredCategories.map(c => ({ value: c.id, label: (locale === "th" ? c.th : c.en) }))}
           />
         </div>
 
