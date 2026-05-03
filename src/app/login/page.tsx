@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Wallet, Check, Mail, Lock, CheckCircle2 } from 'lucide-react';
+import { Wallet, Check, Mail, Lock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useTweaks } from '@/components/Providers';
 import { I18N } from '@/lib/i18n';
 import { cx, Btn } from '@/components/Primitives';
