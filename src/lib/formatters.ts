@@ -1,4 +1,4 @@
-import { I18N, Locale } from './i18n';
+import { I18N, Locale } from './translations';
 
 export function formatTHB(amount: number, opts: { sign?: boolean, compact?: boolean } = {}) {
   const { sign = false, compact = false } = opts;

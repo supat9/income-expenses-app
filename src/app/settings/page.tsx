@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { PageHeader, Card, Btn, Select, Badge } from '@/components/Primitives';
+import { PageHeader, Card, Btn, Select, Badge } from '@/components/ui';
 import { LogOut, Download, Sun, Moon } from 'lucide-react';
 import { useTweaks } from '@/components/Providers';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { I18N } from '@/lib/i18n';
+import { I18N } from '@/lib/translations';
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (

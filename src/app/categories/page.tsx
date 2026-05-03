@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { PageHeader, Card, Btn, Modal, Empty, cx } from '@/components/Primitives';
+import { PageHeader, Card, Btn, Modal, Empty, cx } from '@/components/ui';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useTweaks } from '@/components/Providers';
 import { formatTHB } from '@/lib/formatters';

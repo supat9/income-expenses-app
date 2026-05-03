@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { PageHeader, Stat, Card, Btn, Empty, cx } from '@/components/Primitives';
+import { PageHeader, Stat, Card, Btn, Empty, cx } from '@/components/ui';
 import { AreaLine, Donut, MiniBar } from '@/components/Charts';
 import { Plus, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Wallet, Sparkles, AlertTriangle } from 'lucide-react';
 import { useTweaks } from '@/components/Providers';
-import { I18N } from '@/lib/i18n';
+import { I18N } from '@/lib/translations';
 import { formatTHB, formatDate } from '@/lib/formatters';
 import Link from 'next/link';
 import { AddTransactionModal } from '@/components/AddTransactionModal';

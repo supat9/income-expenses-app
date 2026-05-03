@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react';
 import { Wallet, Check } from 'lucide-react';
 import { useTweaks } from '@/components/Providers';
-import { cx, Btn } from '@/components/Primitives';
+import { cx, Btn } from '@/components/ui';
 import { Sparkline } from '@/components/Charts';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';

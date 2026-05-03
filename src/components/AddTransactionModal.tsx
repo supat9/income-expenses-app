@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Modal, TextInput, Select, Btn } from './Primitives';
+import { Modal, TextInput, Select, Btn } from './ui';
 import { useTweaks } from '@/components/Providers';
-import { I18N } from '@/lib/i18n';
+import { I18N } from '@/lib/translations';
 import { formatTHB } from '@/lib/formatters';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 

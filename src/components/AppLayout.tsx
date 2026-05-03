@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Wallet, Home, List, Tag, BarChart2, Settings, LogOut, Plus } from 'lucide-react';
 import { useTweaks } from './Providers';
-import { I18N } from '@/lib/i18n';
-import { cx } from './Primitives';
+import { I18N } from '@/lib/translations';
+import { cx } from './ui';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-export default function Shell({ children }: { children: React.ReactNode }) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { tweaks } = useTweaks();
   const { data: session } = useSession();
   const pathname = usePathname();

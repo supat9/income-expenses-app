@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, IBM_Plex_Sans_Thai, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { TweaksProvider } from "@/components/Providers";
-import Shell from "@/components/Shell";
+import AppLayout from "@/components/AppLayout";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const ibmPlexThai = IBM_Plex_Sans_Thai({
@@ -29,9 +29,9 @@ export default function RootLayout({
     <html lang="th">
       <body className={`${inter.variable} ${ibmPlexThai.variable} ${jetbrainsMono.variable}`}>
         <TweaksProvider>
-          <Shell>
+          <AppLayout>
             {children}
-          </Shell>
+          </AppLayout>
         </TweaksProvider>
       </body>
     </html>

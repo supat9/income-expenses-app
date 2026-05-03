@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { PageHeader, Card, Stat, Empty } from '@/components/Primitives';
+import { PageHeader, Card, Stat, Empty } from '@/components/ui';
 import { MiniBar } from '@/components/Charts';
 import { ArrowUp, ArrowDown, Wallet, Sparkles } from 'lucide-react';
 import { useTweaks } from '@/components/Providers';
-import { I18N } from '@/lib/i18n';
+import { I18N } from '@/lib/translations';
 import { formatTHB } from '@/lib/formatters';
 
 export default function ReportsPage() {

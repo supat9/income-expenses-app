@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { PageHeader, Card, Btn, Empty, Select, TextInput, Badge, cx } from '@/components/Primitives';
+import { PageHeader, Card, Btn, Empty, Select, TextInput, Badge, cx } from '@/components/ui';
 import { Plus, Search, ArrowDown, ArrowUp, Download, Pencil, Trash2 } from 'lucide-react';
 import { useTweaks } from '@/components/Providers';
-import { I18N } from '@/lib/i18n';
+import { I18N } from '@/lib/translations';
 import { formatTHB, formatDate } from '@/lib/formatters';
 import { AddTransactionModal } from '@/components/AddTransactionModal';
 

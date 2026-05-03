@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { I18N, Locale } from '@/lib/i18n';
+import { I18N, Locale } from '@/lib/translations';
 import { formatTHB } from '@/lib/formatters';
 
 interface AreaLineProps {

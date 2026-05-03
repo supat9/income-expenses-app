@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { PageHeader, Btn, Modal, Empty, cx } from '@/components/Primitives';
+import { PageHeader, Btn, Modal, Empty, cx } from '@/components/ui';
 import { MiniBar } from '@/components/Charts';
 import { Plus, Pencil, Trash2, AlertTriangle } from 'lucide-react';
 import { useTweaks } from '@/components/Providers';
-import { I18N } from '@/lib/i18n';
+import { I18N } from '@/lib/translations';
 import { formatTHB } from '@/lib/formatters';
 
 export default function BudgetsPage() {
