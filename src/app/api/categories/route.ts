@@ -17,14 +17,6 @@ const DEFAULT_CATEGORIES = [
   { kind: "income",  name_th: "ลงทุน",    name_en: "Investments",     color: "oklch(0.6 0.13 130)",  icon: "📈", slug: "invest" },
 ];
 
-const DEFAULT_BUDGET_SLUGS = [
-  { slug: "food",     limit: 8000 },
-  { slug: "transit",  limit: 3500 },
-  { slug: "shopping", limit: 5000 },
-  { slug: "utility",  limit: 4000 },
-  { slug: "ent",      limit: 2500 },
-  { slug: "health",   limit: 3000 },
-];
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -68,20 +60,6 @@ export async function GET() {
       DEFAULT_CATEGORIES.map(c => ({ ...c, user_id: userId }))
     );
 
-    const { data: seeded } = await sb
-      .from("categories")
-      .select("id, slug")
-      .eq("user_id", userId);
-
-    if (seeded?.length) {
-      const budgetRows = DEFAULT_BUDGET_SLUGS
-        .map(b => {
-          const cat = seeded.find(c => c.slug === b.slug);
-          return cat ? { user_id: userId, category_id: cat.id, limit: b.limit } : null;
-        })
-        .filter(Boolean);
-      if (budgetRows.length) await sb.from("budgets").insert(budgetRows);
-    }
   }
 
   const { data, error } = await sb
