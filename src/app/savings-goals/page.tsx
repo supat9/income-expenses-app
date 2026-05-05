@@ -68,6 +68,7 @@ export default function SavingsGoalsPage() {
   const [saving, setSaving] = useState(false);
   const [addTarget, setAddTarget] = useState<any>(null);
   const [addAmt, setAddAmt] = useState('');
+  const [deductBalance, setDeductBalance] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -127,10 +128,10 @@ export default function SavingsGoalsPage() {
   const addSavings = async () => {
     const amt = parseFloat(addAmt);
     if (!amt || amt <= 0) return;
-    await fetch(`/api/savings-goals/${addTarget.id}`, {
-      method: 'PATCH',
+    await fetch(`/api/savings-goals/${addTarget.id}/deposit`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ savedAmount: addTarget.savedAmount + amt }),
+      body: JSON.stringify({ amount: amt, withTransaction: deductBalance }),
     });
     setAddTarget(null);
     setAddAmt('');
@@ -224,7 +225,7 @@ export default function SavingsGoalsPage() {
                     {done ? `✓ ${th ? 'บรรลุเป้าหมายแล้ว!' : 'Goal reached!'}` : hint}
                   </span>
                   {!done && (
-                    <button className="gl-add-btn" onClick={() => { setAddTarget(g); setAddAmt(''); }}>
+                    <button className="gl-add-btn" onClick={() => { setAddTarget(g); setAddAmt(''); setDeductBalance(true); }}>
                       + {th ? 'เพิ่มเงิน' : 'Add savings'}
                     </button>
                   )}
@@ -348,6 +349,22 @@ export default function SavingsGoalsPage() {
                 />
               </div>
             </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: deductBalance ? 'var(--accent-soft)' : 'var(--surface-2)', border: '1px solid', borderColor: deductBalance ? 'color-mix(in oklab, var(--accent) 30%, var(--line))' : 'var(--line)', borderRadius: 10, cursor: 'pointer', transition: 'all .15s' }}>
+              <input
+                type="checkbox"
+                checked={deductBalance}
+                onChange={e => setDeductBalance(e.target.checked)}
+                style={{ width: 16, height: 16, accentColor: 'var(--accent)', cursor: 'pointer' }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: deductBalance ? 'var(--accent-ink)' : 'var(--ink)' }}>
+                  {th ? 'หักจากยอดคงเหลือ' : 'Deduct from balance'}
+                </div>
+                <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 2 }}>
+                  {th ? 'บันทึกเป็นรายจ่าย "ออมเงิน" ให้อัตโนมัติ' : 'Auto-record as "Savings" expense'}
+                </div>
+              </div>
+            </label>
           </div>
         )}
       </Modal>

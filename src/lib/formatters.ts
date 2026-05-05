@@ -13,6 +13,23 @@ export function formatTHB(amount: number, opts: { sign?: boolean, compact?: bool
   return "฿" + formatted;
 }
 
+const BKK_OFFSET_MS = 7 * 60 * 60 * 1000;
+
+/** Today's date in Bangkok timezone as YYYY-MM-DD */
+export function todayBangkok(): string {
+  return new Date(Date.now() + BKK_OFFSET_MS).toISOString().split('T')[0];
+}
+
+/** Convert a YYYY-MM-DD picker value to an ISO string at noon Bangkok time */
+export function datePickerToIso(dateStr: string): string {
+  return `${dateStr}T12:00:00+07:00`;
+}
+
+/** Extract the date portion (YYYY-MM-DD) in Bangkok timezone from an ISO string */
+export function isoToBangkokDate(iso: string): string {
+  return new Date(new Date(iso).getTime() + BKK_OFFSET_MS).toISOString().split('T')[0];
+}
+
 export function formatDate(iso: string, locale: Locale = "th", style: "short" | "medium" | "time" | "default" = "short") {
   const d = new Date(iso);
   const months = I18N[locale]?.months || I18N.en.months;

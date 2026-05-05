@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Modal, TextInput, Select, Btn } from './ui';
 import { useTweaks } from '@/components/Providers';
 import { I18N } from '@/lib/translations';
-import { formatTHB } from '@/lib/formatters';
+import { formatTHB, todayBangkok, datePickerToIso, isoToBangkokDate } from '@/lib/formatters';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 
 interface AddTransactionModalProps {
@@ -28,7 +28,7 @@ type FormState = {
 function defaultFormState(editing: AddTransactionModalProps['editing'], categories: AddTransactionModalProps['categories']): FormState {
   if (editing) return {
     txType: editing.amount >= 0 ? "income" : "expense",
-    date: new Date(editing.date).toISOString().split('T')[0],
+    date: isoToBangkokDate(editing.date),
     amount: Math.abs(editing.amount).toString(),
     categoryId: editing.categoryId,
     note: editing.note ?? "",
@@ -37,7 +37,7 @@ function defaultFormState(editing: AddTransactionModalProps['editing'], categori
   };
   return {
     txType: "expense",
-    date: new Date().toISOString().split('T')[0],
+    date: todayBangkok(),
     amount: "",
     categoryId: categories.find(c => c.kind === "expense")?.id ?? "",
     note: "",
@@ -71,7 +71,7 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
     try {
       await onSubmit({
         id: editing?.id,
-        date: new Date(form.date).toISOString(),
+        date: datePickerToIso(form.date),
         amount: form.txType === "expense" ? -amt : amt,
         categoryId: form.categoryId,
         note: form.note,
@@ -195,6 +195,9 @@ export function AddTransactionModal({ open, onClose, onSubmit, categories, editi
             options={[
               { value: "SCB Easy", label: "SCB Easy" },
               { value: "Kasikorn", label: "Kasikorn" },
+              { value: "Krungthai", label: "Krungthai" },
+              { value: "Bangkok Bank", label: "Bangkok Bank" },
+              { value: "Thanachart", label: "Thanachart" },
               { value: "Cash", label: "Cash" },
             ]}
           />

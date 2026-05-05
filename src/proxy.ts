@@ -2,7 +2,7 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = await getToken({ req: request });
   if (!token) {
     const url = new URL("/login", request.url);
@@ -13,5 +13,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/transactions/:path*", "/categories/:path*", "/budgets/:path*", "/reports/:path*", "/settings/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/transactions/:path*",
+    "/categories/:path*",
+    "/budgets/:path*",
+    "/savings-goals/:path*",
+    "/debts/:path*",
+    "/reports/:path*",
+    "/settings/:path*",
+  ],
 };

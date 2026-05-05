@@ -69,6 +69,7 @@ export default function DebtsPage() {
   const [saving, setSaving] = useState(false);
   const [payTarget, setPayTarget] = useState<any>(null);
   const [payAmt, setPayAmt] = useState('');
+  const [deductBalance, setDeductBalance] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -130,11 +131,10 @@ export default function DebtsPage() {
   const recordPayment = async () => {
     const amt = parseFloat(payAmt);
     if (!amt || amt <= 0) return;
-    const newPaid = Math.min(payTarget.paidAmount + amt, payTarget.totalAmount);
-    await fetch(`/api/debts/${payTarget.id}`, {
-      method: 'PATCH',
+    await fetch(`/api/debts/${payTarget.id}/payment`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paidAmount: newPaid }),
+      body: JSON.stringify({ amount: amt, withTransaction: deductBalance }),
     });
     setPayTarget(null);
     setPayAmt('');
@@ -218,7 +218,7 @@ export default function DebtsPage() {
                     {isPaid ? `✓ ${th ? 'ชำระครบแล้ว!' : 'Paid off!'}` : hint}
                   </span>
                   {!isPaid && (
-                    <button className="dt-pay-btn" onClick={() => { setPayTarget(d); setPayAmt(d.monthlyPayment ? String(d.monthlyPayment) : ''); }}>
+                    <button className="dt-pay-btn" onClick={() => { setPayTarget(d); setPayAmt(d.monthlyPayment ? String(d.monthlyPayment) : ''); setDeductBalance(true); }}>
                       + {th ? 'บันทึกการชำระ' : 'Record payment'}
                     </button>
                   )}
@@ -356,6 +356,22 @@ export default function DebtsPage() {
                 />
               </div>
             </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: deductBalance ? 'var(--accent-soft)' : 'var(--surface-2)', border: '1px solid', borderColor: deductBalance ? 'color-mix(in oklab, var(--accent) 30%, var(--line))' : 'var(--line)', borderRadius: 10, cursor: 'pointer', transition: 'all .15s' }}>
+              <input
+                type="checkbox"
+                checked={deductBalance}
+                onChange={e => setDeductBalance(e.target.checked)}
+                style={{ width: 16, height: 16, accentColor: 'var(--accent)', cursor: 'pointer' }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: deductBalance ? 'var(--accent-ink)' : 'var(--ink)' }}>
+                  {th ? 'หักจากยอดคงเหลือ' : 'Deduct from balance'}
+                </div>
+                <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 2 }}>
+                  {th ? 'บันทึกเป็นรายจ่าย "ชำระหนี้" ให้อัตโนมัติ' : 'Auto-record as "Debt Payment" expense'}
+                </div>
+              </div>
+            </label>
           </div>
         )}
       </Modal>
