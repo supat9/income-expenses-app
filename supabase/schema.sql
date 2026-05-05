@@ -45,8 +45,44 @@ create table if not exists public.budgets (
   updated_at  timestamptz    default now()
 );
 
+create table if not exists public.savings_goals (
+  id              uuid           default gen_random_uuid() primary key,
+  user_id         uuid           not null references public.users(id) on delete cascade,
+  name_th         text           not null,
+  name_en         text           not null,
+  icon            text           not null default '🎯',
+  color           text           not null default 'oklch(0.55 0.18 270)',
+  target_amount   numeric(12, 2) not null,
+  saved_amount    numeric(12, 2) not null default 0,
+  monthly_target  numeric(12, 2),
+  target_date     date,
+  status          text           not null default 'active' check (status in ('active', 'completed')),
+  created_at      timestamptz    default now(),
+  updated_at      timestamptz    default now()
+);
+
+create table if not exists public.debts (
+  id               uuid           default gen_random_uuid() primary key,
+  user_id          uuid           not null references public.users(id) on delete cascade,
+  name_th          text           not null,
+  name_en          text           not null,
+  icon             text           not null default '💳',
+  color            text           not null default 'oklch(0.6 0.19 25)',
+  creditor         text,
+  total_amount     numeric(12, 2) not null,
+  paid_amount      numeric(12, 2) not null default 0,
+  monthly_payment  numeric(12, 2),
+  interest_rate    numeric(5, 2)  default 0,
+  due_date         date,
+  status           text           not null default 'active' check (status in ('active', 'paid')),
+  created_at       timestamptz    default now(),
+  updated_at       timestamptz    default now()
+);
+
 -- Enable RLS (all writes go through service role key which bypasses RLS)
-alter table public.users        enable row level security;
-alter table public.categories   enable row level security;
-alter table public.transactions enable row level security;
-alter table public.budgets      enable row level security;
+alter table public.users          enable row level security;
+alter table public.categories     enable row level security;
+alter table public.transactions   enable row level security;
+alter table public.budgets        enable row level security;
+alter table public.savings_goals  enable row level security;
+alter table public.debts          enable row level security;

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Wallet, Home, List, Tag, BarChart2, Settings, LogOut, Plus } from 'lucide-react';
+import { Wallet, Home, List, Tag, BarChart2, Settings, LogOut, Plus, Target, CreditCard } from 'lucide-react';
 import { useTweaks } from './Providers';
 import { I18N } from '@/lib/translations';
 import { cx } from './ui';
@@ -29,6 +29,8 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
     { id: "/transactions", label: t.nav.transactions, icon: <List size={17} /> },
     { id: "/categories", label: t.nav.categories, icon: <Tag size={17} /> },
     { id: "/budgets", label: t.nav.budgets, icon: <Wallet size={17} /> },
+    { id: "/savings-goals", label: t.nav.savings, icon: <Target size={17} /> },
+    { id: "/debts", label: t.nav.debts, icon: <CreditCard size={17} /> },
     { id: "/reports", label: t.nav.reports, icon: <BarChart2 size={17} /> },
     { id: "/settings", label: t.nav.settings, icon: <Settings size={17} /> },
   ];

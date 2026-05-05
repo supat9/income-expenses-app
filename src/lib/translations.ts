@@ -10,6 +10,8 @@ export const I18N = {
       reports: "รายงาน",
       settings: "ตั้งค่า",
       logout: "ออกจากระบบ",
+      savings: "ของที่อยากได้",
+      debts: "หนี้สิน",
     },
     common: {
       add: "เพิ่มรายการ",
@@ -57,6 +59,8 @@ export const I18N = {
       reports: "Reports",
       settings: "Settings",
       logout: "Sign out",
+      savings: "Wish List",
+      debts: "Debts",
     },
     common: {
       add: "Add transaction",
