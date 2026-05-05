@@ -89,7 +89,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Nav */}
       <nav className="mobile-nav">
-        {navItems.slice(0, 5).map(n => {
+        {navItems.map(n => {
           const isActive = pathname === n.id;
           return (
             <Link key={n.id} href={n.id} className={cx("mobile-nav-item", isActive && "is-active")}>

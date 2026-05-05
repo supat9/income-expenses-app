@@ -744,14 +744,21 @@ nav.sidebar-nav {
   bottom: 0;
   left: 0;
   right: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   background: var(--surface);
   border-top: 1px solid var(--line);
   padding: 6px 4px 12px;
   z-index: 50;
 }
+.mobile-nav::-webkit-scrollbar {
+  display: none;
+}
 .mobile-nav-item {
+  flex: 0 0 auto;
+  min-width: 64px;
   border: none;
   background: transparent;
   color: var(--ink-3);
