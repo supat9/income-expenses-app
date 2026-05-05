@@ -247,7 +247,7 @@ export default function TransactionsPage() {
                     <div className="tx-account">{tx.account}</div>
                   </div>
                   <div><Badge color={c?.color}>{locale === "th" ? c?.th : c?.en}</Badge></div>
-                  <div className="tx-time num">{new Date(tx.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+                  <div className="tx-time num">{new Date(tx.date).toLocaleTimeString('th-TH', { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" })}</div>
                   <div className={cx("tx-amt", "num", tx.amount > 0 ? "pos" : "neg")}>{formatTHB(tx.amount, { sign: true })}</div>
                   <div className="tx-actions">
                     <button onClick={() => { setEditing(tx); setAddOpen(true); }} title={t.common.edit}><Pencil size={14} /></button>

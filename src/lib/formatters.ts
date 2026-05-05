@@ -20,9 +20,13 @@ export function todayBangkok(): string {
   return new Date(Date.now() + BKK_OFFSET_MS).toISOString().split('T')[0];
 }
 
-/** Convert a YYYY-MM-DD picker value to an ISO string at noon Bangkok time */
+/** Convert a YYYY-MM-DD picker value to an ISO string using the current Bangkok time-of-day */
 export function datePickerToIso(dateStr: string): string {
-  return `${dateStr}T12:00:00+07:00`;
+  const bkk = new Date(Date.now() + BKK_OFFSET_MS);
+  const hh = String(bkk.getUTCHours()).padStart(2, '0');
+  const mm = String(bkk.getUTCMinutes()).padStart(2, '0');
+  const ss = String(bkk.getUTCSeconds()).padStart(2, '0');
+  return `${dateStr}T${hh}:${mm}:${ss}+07:00`;
 }
 
 /** Extract the date portion (YYYY-MM-DD) in Bangkok timezone from an ISO string */
