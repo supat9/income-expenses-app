@@ -285,7 +285,8 @@ textarea {
 
 .sel-wrap {
   position: relative;
-  display: inline-flex;
+  display: flex;
+  width: 100%;
 }
 .sel-wrap select {
   appearance: none;
@@ -298,6 +299,8 @@ textarea {
   color: var(--ink);
   cursor: pointer;
   outline: none;
+  flex: 1;
+  min-width: 0;
 }
 .sel-wrap select:focus {
   border-color: var(--accent);

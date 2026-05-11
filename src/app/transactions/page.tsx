@@ -260,7 +260,7 @@ export default function TransactionsPage() {
         ))}
       </Card>
 
-      <AddTransactionModal key={editing?.id ?? 'new'} open={addOpen} onClose={() => setAddOpen(false)} onSubmit={onSubmitTx} categories={categories} editing={editing} />
+      {addOpen && <AddTransactionModal key={editing?.id ?? 'new'} open={addOpen} onClose={() => setAddOpen(false)} onSubmit={onSubmitTx} categories={categories} editing={editing} />}
     </div>
   );
 }
