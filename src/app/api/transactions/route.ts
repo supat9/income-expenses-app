@@ -47,7 +47,7 @@ export async function GET(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json(
-    data.map(tx => ({
+    data.map((tx: typeof data[number]) => ({
       id: tx.id,
       date: tx.date,
       amount: parseFloat(tx.amount),
