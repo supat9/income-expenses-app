@@ -10,20 +10,39 @@ export async function GET(request: Request) {
   if (!userId) return NextResponse.json({ error: "No user ID in session" }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
-  const months = Math.max(1, parseInt(searchParams.get("months") ?? "6"));
-
-  const since = new Date();
-  since.setMonth(since.getMonth() - months + 1);
-  since.setDate(1);
-  since.setHours(0, 0, 0, 0);
 
   const sb = getSupabaseAdmin();
-  const { data, error } = await sb
+  let q: any = sb
     .from("transactions")
     .select("id, date, amount, category_id, note, account")
-    .eq("user_id", userId)
-    .gte("date", since.toISOString())
-    .order("date", { ascending: false });
+    .eq("user_id", userId);
+
+  // Support explicit date range via `from` and `to` query params (YYYY-MM-DD or full ISO).
+  const fromParam = searchParams.get("from");
+  const toParam = searchParams.get("to");
+  if (fromParam || toParam) {
+    if (fromParam) {
+      const fromIso = /^\d{4}-\d{2}-\d{2}$/.test(fromParam)
+        ? new Date(fromParam + "T00:00:00Z").toISOString()
+        : new Date(fromParam).toISOString();
+      q = q.gte("date", fromIso);
+    }
+    if (toParam) {
+      const toIso = /^\d{4}-\d{2}-\d{2}$/.test(toParam)
+        ? new Date(toParam + "T23:59:59Z").toISOString()
+        : new Date(toParam).toISOString();
+      q = q.lte("date", toIso);
+    }
+  } else {
+    const months = Math.max(1, parseInt(searchParams.get("months") ?? "6"));
+    const since = new Date();
+    since.setMonth(since.getMonth() - months + 1);
+    since.setDate(1);
+    since.setHours(0, 0, 0, 0);
+    q = q.gte("date", since.toISOString());
+  }
+
+  const { data, error } = await q.order("date", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

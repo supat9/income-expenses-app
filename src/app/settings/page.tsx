@@ -35,6 +35,8 @@ export default function SettingsPage() {
   const router = useRouter();
   const [budgetAlert, setBudgetAlert] = useState(true);
   const [weeklySummary, setWeeklySummary] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
@@ -155,8 +157,41 @@ export default function SettingsPage() {
       </Card>
 
       <Card title={locale === "th" ? "ข้อมูล" : "Data"}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <Btn variant="secondary" icon={<Download size={14} />}>{locale === "th" ? "ส่งออก CSV" : "Export CSV"}</Btn>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: 'center' }}>
+          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ height: 36, padding: '0 10px', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8 }} />
+          <span style={{ color: 'var(--ink-3)' }}>—</span>
+          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ height: 36, padding: '0 10px', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8 }} />
+          <Btn variant="secondary" icon={<Download size={14} />} onClick={async () => {
+            try {
+              const params = new URLSearchParams();
+              if (startDate) params.set('from', startDate);
+              if (endDate) params.set('to', endDate);
+              if (!startDate && !endDate) params.set('months', '1200');
+              const txUrl = '/api/transactions?' + params.toString();
+              const [catRes, txRes] = await Promise.all([
+                fetch('/api/categories'),
+                fetch(txUrl),
+              ]);
+              if (!catRes.ok || !txRes.ok) throw new Error('Failed to fetch data');
+              const [categories, transactions] = await Promise.all([catRes.json(), txRes.json()]);
+              const rows = [["Date", "Amount", "Category", "Note", "Account"]];
+              transactions.forEach((tx: any) => {
+                const c = categories.find((c: any) => c.id === tx.categoryId);
+                rows.push([tx.date.slice(0, 10), tx.amount, c?.en || tx.categoryId, tx.note || "", tx.account || ""]);
+              });
+              const csv = rows.map((r: any[]) => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+              const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url; a.download = `ledger-${Date.now()}.csv`; a.click();
+              URL.revokeObjectURL(url);
+            } catch (err) {
+              // minimal error handling — keep UI simple
+              // eslint-disable-next-line no-console
+              console.error('Export CSV failed', err);
+              alert(locale === 'th' ? 'ส่งออกล้มเหลว' : 'Export failed');
+            }
+          }}>{locale === "th" ? "ส่งออก CSV" : "Export CSV"}</Btn>
           <div style={{ flex: 1 }} />
           <Btn variant="ghost" icon={<LogOut size={14} />} onClick={handleSignOut}>
             {locale === "th" ? "ออกจากระบบ" : "Sign out"}
